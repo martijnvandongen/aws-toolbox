@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y docker-ce
 
 # Install pip packages
 RUN pip install awscli awsebcli cfn_flip jinja2-cli cfn-lint \
-                chalice aws-sam-cli sceptre ssm-cache requests awsume
+                chalice sceptre ssm-cache requests awsume
 
 # Install aws cli v2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
