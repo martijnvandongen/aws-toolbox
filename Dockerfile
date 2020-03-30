@@ -1,20 +1,3 @@
-# aws-toolbox
-
-## Usage
-
-```text
-$ docker pull mvandongen/aws-toolbox
-$ docker run -it \
-    -v $(pwd)/:/workdir \
-    -v $HOME:/root \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -p "3000:3000" \
-    mvandongen/aws-toolbox
-```
-
-## Dockerfile
-
-```Dockerfile
 FROM python
 
 # prep install for docker
@@ -27,15 +10,15 @@ RUN add-apt-repository \
    $(lsb_release -cs) \
    stable"
 
-# Install apt-get packages
+# install apt-get packages
 RUN apt-get update && \
     apt-get install -y httpie python3-dev zip jq git docker-ce
 
-# Install pip packages
+# install pip packages
 RUN pip install awscli awsebcli cfn_flip jinja2-cli cfn-lint \
                 chalice aws-sam-cli sceptre ssm-cache requests awsume
 
-# Install aws cli v2
+# install aws cli v2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
         unzip awscliv2.zip && \
         sudo ./aws/install
@@ -55,4 +38,3 @@ RUN npm install -g aws-cdk
 
 WORKDIR /workdir
 ENTRYPOINT /bin/bash
-```
