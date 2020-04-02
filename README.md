@@ -4,9 +4,23 @@
 
 ```text
 $ docker pull mvandongen/aws-toolbox
+```
+
+```
 $ docker run -it \
     -v $(pwd)/:/workdir \
-    -v $HOME:/root \
+    -v $HOME/.aws:/root/.aws \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -p "3000:3000" \
+    mvandongen/aws-toolbox
+```
+
+```
+$ docker run -it \
+    -e AWS_ACCESS_KEY_ID \
+    -e AWS_SECRET_ACCESS_KEY \
+    -e AWS_SESSION_TOKEN \
+    -v $(pwd)/:/workdir \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -p "3000:3000" \
     mvandongen/aws-toolbox
@@ -17,23 +31,22 @@ $ docker run -it \
 ```Dockerfile
 FROM python
 
-# prep install for docker
+# Install apt-get packages
 RUN apt-get update && \
-    apt-get install -y curl apt-transport-https ca-certificates \
-                       software-properties-common apt-transport-https gnupg2
+    apt-get install -y curl apt-transport-https ca-certificates locales httpie python3-dev zip jq git \
+                       software-properties-common apt-transport-https gnupg2 build-essential file
+
+# Install docker
 RUN curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg | apt-key add -
 RUN add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
    $(lsb_release -cs) \
    stable"
-
-# Install apt-get packages
-RUN apt-get update && \
-    apt-get install -y httpie python3-dev zip jq git docker-ce
+RUN apt-get update && apt-get install -y docker-ce                 
 
 # Install pip packages
 RUN pip install awscli awsebcli cfn_flip jinja2-cli cfn-lint \
-                chalice aws-sam-cli sceptre ssm-cache requests awsume
+                chalice sceptre ssm-cache requests awsume
 
 # Install aws cli v2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
@@ -52,6 +65,22 @@ RUN tfenv install 0.12.24
 RUN curl -sL https://deb.nodesource.com/setup_13.x | bash -
 RUN apt-get install -y nodejs
 RUN npm install -g aws-cdk
+
+# Install brew and brew packages
+RUN localedef -i en_US -f UTF-8 en_US.UTF-8
+RUN useradd -m -s /bin/bash linuxbrew && \
+    echo 'linuxbrew ALL=(ALL) NOPASSWD:ALL' >>/etc/sudoers
+USER linuxbrew
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+RUN test -d ~/.linuxbrew && \
+    eval $(~/.linuxbrew/bin/brew shellenv) && \
+    test -d /home/linuxbrew/.linuxbrew && \
+    eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv) && \
+    echo "eval \$($(brew --prefix)/bin/brew shellenv)" >>~/.profile && \
+    brew tap aws/tap && \
+    brew install aws-sam-cli aws-vault
+
+USER root
 
 WORKDIR /workdir
 ENTRYPOINT /bin/bash

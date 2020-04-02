@@ -49,5 +49,7 @@ RUN test -d ~/.linuxbrew && \
     brew tap aws/tap && \
     brew install aws-sam-cli aws-vault
 
+USER root
+
 WORKDIR /workdir
 ENTRYPOINT /bin/bash
